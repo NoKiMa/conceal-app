@@ -1,4 +1,5 @@
 import express, { Request, Response } from "express";
+import cors from 'cors';
 import fs from "fs";
 import multer from "multer";
 import { embedTextInFile, extractTextFromFile } from "./services/steganography";
@@ -27,16 +28,26 @@ declare namespace Express {
 
 const app = express();
 const upload = multer({ dest: "uploads/" });
+app.use(cors({
+  origin: 'http://localhost:3001', // Указываем порт вашего Next.js приложения
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-app.get("/", (req, res) => {
-    res.send("Hello World!");
+// API routes
+app.use("/api", (req, res, next) => {
+  next();
 });
 
-app.post("/hide", upload.single("file"), async (req: Request, res: Response) => {
+app.get("/api/", (req, res) => {
+    res.send("Hello World!");
+});
+app.post("/api/hide", upload.single("file"), async (req: Request, res: Response) => {
     const { text } = req.body;
+
     if (!req.file || !text) return res.status(400).send("File and text are required");
     const resultPath = await embedTextInFile(req.file.path, text);
     res.download(resultPath, (err) => {
@@ -49,7 +60,7 @@ app.post("/hide", upload.single("file"), async (req: Request, res: Response) => 
     });
 });
 
-app.post("/reveal", upload.single("file"), async (req: Request, res: Response) => {
+app.post("/api/reveal", upload.single("file"), async (req: Request, res: Response) => {
     if (!req.file) return res.status(400).send("File is required");
 
     const hidden = await extractTextFromFile(req.file.path);
