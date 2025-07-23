@@ -7,6 +7,7 @@ import FileInput from './FileInput';
 import TextInput from './TextInput';
 import SubmitButton from './SubmitButton';
 import Loader from './Loader';
+import HidenTextBoard from './HidenTextBoard';
 
 
 export default function Main() {
@@ -46,6 +47,10 @@ export default function Main() {
     }
   };
 
+  function handleLoaderClick(): void {
+    setResult(null);
+  }
+
   return (
     <div className="bg-gradient-to-br rounded-lg from-gray-50 to-white">
       <div className="container  mx-auto px-4 py-4">
@@ -55,7 +60,8 @@ export default function Main() {
         <div className="bg-white border border-amber-200 rounded-lg shadow-lg p-8">
           <form onSubmit={handleSubmit} className="space-y-4">
             <FileInput fileInputRef={fileInputRef as React.RefObject<HTMLInputElement>} />
-            <TextInput />
+            {data.activeTab === 'hide' ? <TextInput /> :
+            <HidenTextBoard />}
             <SubmitButton activeTab={data.activeTab} />
             {result && (
               <div className="mt-4 p-4 bg-green-50 text-green-800 rounded-md flex justify-center">
@@ -64,7 +70,7 @@ export default function Main() {
             )}
           </form>
           {data.resultFileUrl && (
-            <Loader resultFileUrl={data.resultFileUrl}/>
+            <Loader handleLoaderClick={() => handleLoaderClick()} resultFileUrl={data.resultFileUrl} fileName={data.resultFileWithText?.name || undefined}/>
           )}
         </div>
       </div>

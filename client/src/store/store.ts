@@ -61,24 +61,35 @@ const store = create<StoreState>()(
           });
         },
         hideData: async (file: File, text: string) => {
-          const formData = new FormData();
-          formData.append('file', file);
-          formData.append('text', text);
-          
-          const response = await fetch('http://localhost:3000/api/hide', {
-            method: 'POST',
-            body: formData,
-          });
-        
-          // Создаем временный элемент <a> для скачивания
-          const fileName = store().data.formData.fileName;
-          const blob = await response.blob();
-          const url = window.URL.createObjectURL(blob);
-          const newFileName = nameEditor(fileName);
-          set((state) => {
-            state.data.resultFileWithText = new File([blob], newFileName, { type: file.type });
-            state.data.resultFileUrl = url;
-          });
+          try {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('text', text);
+            
+            const response = await fetch('http://localhost:3000/api/hide', {
+              method: 'POST',
+              body: formData,
+            });
+
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            // Создаем временный элемент <a> для скачивания
+            const fileName = get().data.formData.fileName;
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const newFileName = nameEditor(fileName);
+            set((state) => {
+              state.data.resultFileWithText = new File([blob], newFileName, { type: file.type });
+              state.data.resultFileUrl = url;
+            });
+            
+          } catch (error) {
+            console.error('Error in hideData:', error);
+            // You might want to add state management for errors here
+            // For example: set((state) => { state.error = error.message });
+            throw error; // Re-throw to propagate the error
+          }
         },
         retrieveData: async (file: File) => {
           set((state) => {
