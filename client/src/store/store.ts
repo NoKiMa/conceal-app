@@ -43,7 +43,7 @@ const initialState = {
 const store = create<StoreState>()(
   devtools(
     persist(
-      immer((set) => ({
+      immer((set, get) => ({
         data: initialState.data,
 
         setActiveTab: (tab) => {
@@ -102,11 +102,14 @@ const store = create<StoreState>()(
         },
 
         resetStore: () => {
-          const {data} = store();
+          const { data } = get();
+          console.log('resetStore > data', data);
           if (data.resultFileUrl) {
             window.URL.revokeObjectURL(data.resultFileUrl);
           }
-          set(() => initialState);
+          set((state) => {
+            state.data = { ...initialState.data, activeTab: data.activeTab }
+          });
         },
       })),
       {

@@ -1,35 +1,27 @@
 'use client';
 import {useState, useRef} from 'react';
-import store, {StoreState} from '../store/store';
+import store from '../store/store';
+import Header from './Header';
+import Tabs from './Tabs';
+import FileInput from './FileInput';
+import TextInput from './TextInput';
+import SubmitButton from './SubmitButton';
+import Loader from './Loader';
 
-// interface FormData {
-//   file: File | null | undefined;
-//   text?: string;
-// }
 
 export default function Main() {
-  const {data, setActiveTab, setFormData, resetStore, retrieveData, hideData} = store();
+  const {data, setActiveTab, resetStore, retrieveData, hideData} = store();
   const [result, setResult] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleTabChange = (tab: string) => {
+    console.log('handleTabChange > tab', tab);
     setActiveTab(tab);
     resetStore();
     setResult(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    console.log('e.target.files', e.target.files);
-    const file: StoreState['data']['formData']['file'] =
-      e.target.files?.[0] || null;
-    setFormData({file: file, fileName: file?.name || ''});
-  };
-
-  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setFormData({text: e.target.value});
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -57,82 +49,14 @@ export default function Main() {
   return (
     <div className="bg-gradient-to-br rounded-lg from-gray-50 to-white">
       <div className="container  mx-auto px-4 py-4">
-        <h1 className="text-4xl font-bold text-center mb-8 text-amber-300">
-          Steganography Tool
-        </h1>
-
-        {/* Tabs */}
-        <div className="mb-6">
-          <div className="border-b border-gray-200 rounded">
-            <nav
-              className="-mb-px flex space-x-8 justify-center"
-              aria-label="Tabs">
-              <button
-                onClick={() => handleTabChange('hide')}
-                className={`
-                  whitespace-nowrap py-4 px-4 border-b-2 font-medium text-sm rounded-t
-                  ${
-                    data.activeTab === 'hide'
-                      ? 'border-amber-300 text-amber-300'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }
-                `}>
-                Hide Text in File
-              </button>
-              <button
-                onClick={() => handleTabChange('retrieve')}
-                className={`
-                  whitespace-nowrap py-4 px-4 border-b-2 font-medium text-sm rounded-t
-                  ${
-                    data.activeTab === 'retrieve'
-                      ? 'border-amber-300 text-amber-300'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }
-                `}>
-                Get Text from File
-              </button>
-            </nav>
-          </div>
-        </div>
-
+        <Header />
+        <Tabs tabChange={ (tab: string) => handleTabChange(tab)} />
         {/* Form */}
         <div className="bg-white border border-amber-200 rounded-lg shadow-lg p-8">
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm text-amber-300 font-medium mb-1">
-                Select File
-              </label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                ref={fileInputRef}
-                className="block w-full text-sm text-black file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-1 file:text-sm file:font-semibold file:border-amber-300 file:bg-white file:text-amber-400 hover:file:bg-amber-100"
-              />
-            </div>
-
-            {/* Always render the text area with hidden visibility */}
-            <div
-              className={`space-y-2 ${
-                data.activeTab === 'hide' ? 'visible' : 'invisible'
-              }`}>
-              <label className="block text-sm text-amber-300 font-medium mb-1">
-                Enter Text
-              </label>
-              <textarea
-                value={data.formData.text}
-                onChange={handleTextChange}
-                rows={4}
-                className="w-full p-2 border rounded-md  border-amber-300 text-black focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="w-full bg-amber-300 text-white py-2 px-4 rounded-md hover:bg-amber-400 transition-colors">
-              {data.activeTab === 'hide' ? 'Hide Text' : 'Retrieve Text'}
-            </button>
-
+            <FileInput fileInputRef={fileInputRef as React.RefObject<HTMLInputElement>} />
+            <TextInput />
+            <SubmitButton activeTab={data.activeTab} />
             {result && (
               <div className="mt-4 p-4 bg-green-50 text-green-800 rounded-md flex justify-center">
                 {result}
@@ -140,14 +64,7 @@ export default function Main() {
             )}
           </form>
           {data.resultFileUrl && (
-            <div className="mt-4">
-              <a
-                href={data.resultFileUrl}
-                download="file_with_hidden_text"
-                className="bg-amber-300 text-white px-4 py-2 rounded hover:bg-amber-400">
-                Download File with Hidden Text
-              </a>
-            </div>
+            <Loader resultFileUrl={data.resultFileUrl}/>
           )}
         </div>
       </div>
